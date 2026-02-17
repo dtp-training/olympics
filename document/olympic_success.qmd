@@ -1,0 +1,39 @@
+---
+title: "Olympic Success"
+author: "Nicolas Payette"
+format: html
+---
+```{r}
+#| include: false
+library(tidyverse)
+library(here)
+
+medal_counts <-
+  here("data", "medals.csv") |>
+  read_csv() |>
+  count(noc, type) |>
+  pivot_wider(names_from = type, values_from = n, values_fill = 0)
+
+best_winter <- medal_counts |> slice_max(Winter)
+best_summer <- medal_counts |> slice_max(Summer)
+
+r_squared <-
+  summary(lm(Winter ~ Summer, medal_counts))$r.squared
+```
+The country with the most medals at the Winter Olympics is
+`r best_winter$noc`, with `r best_winter$Winter`. For the
+Summer games, it's `r best_summer$noc`, with `r best_summer$Summer`.
+Success at the Winter and Summer games is strongly related, with
+a correlation coefficient ($r^2$) of `r r_squared`. Still, as can
+be seen in @fig-success, some countries are better at one than the other.
+```{r}
+#| label: fig-success
+#| echo: false
+#| fig-cap: "Number of medals in Winter and Summer games"
+#| warnings: false
+medal_counts |>
+ggplot(aes(Summer, Winter)) +
+geom_point() +
+geom_smooth(method = "lm") +
+ggrepel::geom_text_repel(aes(label = noc))
+```
